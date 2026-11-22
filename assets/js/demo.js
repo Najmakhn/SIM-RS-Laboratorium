@@ -28,3 +28,11 @@ document.getElementById('orderForm').addEventListener('submit',e=>{e.preventDefa
 document.getElementById('orderFilter').addEventListener('input',e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#orderRows tr').forEach(r=>r.style.display=r.textContent.toLowerCase().includes(q)?'':'none')});
 document.getElementById('globalSearch').addEventListener('submit',e=>{e.preventDefault();showPage('orders');document.getElementById('orderFilter').value=document.getElementById('searchInput').value;document.getElementById('orderFilter').dispatchEvent(new Event('input'))});
 render();
+// Login visual untuk presentasi: tidak memverifikasi username/password.
+document.getElementById('demoLoginForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ document.getElementById('demoLogin').style.display='none';
+ const app=document.getElementById('demoApp');
+ app.classList.add('demo-entered');
+ showPage('dashboard');
+});

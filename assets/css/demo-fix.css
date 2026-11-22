@@ -53,3 +53,19 @@ main {
   .top { padding: 10px 16px !important; }
   .row > .col-6, .row > .col-md-6, .row > .col-md-4, .row > .col-xl-3 { width: 100% !important; }
 }
+
+/* Demo login screen: visual only, no real authentication */
+#demoLogin { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; background: #fff; }
+#demoLogin .login-art { background: #1b6edc; color: #fff; padding: 3rem; display: flex; flex-direction: column; justify-content: center; }
+#demoLogin .login-art .brand { color: #fff; }
+#demoLogin .login-art .brand i { color: #fff; }
+#demoLogin .login-art .flow { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .5rem; list-style: none; padding: 0; margin: 0; }
+#demoLogin .login-art .flow li { display: flex; gap: .55rem; align-items: flex-start; padding: .65rem .75rem; border-radius: 10px; background: rgba(255,255,255,.14); color: #fff; font-size: .8rem; line-height: 1.25; min-height: 58px; }
+#demoLogin .login-art .flow li b { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: .75rem; background: #fff; color: #1b6edc; }
+#demoLogin .login-art .flow li span { display: block; }
+#demoApp { display: none !important; }
+#demoApp.demo-entered { display: block !important; }
+@media(max-width:900px) {
+  #demoLogin { grid-template-columns: 1fr; }
+  #demoLogin .login-art { display: none; }
+}

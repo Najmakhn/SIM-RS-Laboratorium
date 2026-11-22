@@ -1,19 +1,12 @@
 PAKET DEMO SIMRS UNTUK GITHUB PAGES
 
-1. Ekstrak ZIP ini di komputer.
-2. Upload SELURUH ISI folder SIMRS-GitHub-Pages ke ROOT repository GitHub (branch main).
-   Pastikan index.html berada sejajar dengan README.md, bukan di dalam subfolder.
-3. Di GitHub: Settings > Pages > Build and deployment.
-   Source: Deploy from a branch
-   Branch: main
-   Folder: / (root)
-   Klik Save.
-4. Tunggu deployment selesai, lalu buka:
-   https://najmakhn.github.io/SIM-RS-Laboratorium/
+1. Ekstrak ZIP ini.
+2. Upload seluruh isi folder ke ROOT repository GitHub (branch main).
+   Pastikan index.html sejajar dengan README.md, bukan di dalam subfolder.
+3. Jika diminta mengganti index.html atau assets/js/demo.js, pilih Replace.
+4. Di Settings > Pages: Deploy from a branch, branch main, folder /(root).
+5. Tunggu deployment selesai, lalu buka website GitHub Pages.
 
-Catatan:
-- Ini adalah frontend demo interaktif, bukan backend Flask.
-- Form order, tombol status, pencarian, dan tabel demo berjalan di browser.
-- Data yang ditambahkan disimpan di localStorage browser yang sama.
-- run.py, app/, schema.sql, dan file proyek asli tidak perlu dihapus.
-- File demo tidak memerlukan PythonAnywhere atau Render.
+Fitur: halaman login visual; tombol Masuk langsung membuka dashboard demo tanpa autentikasi asli. Form order, pencarian, menu, dan status order berjalan di browser. Data demo tersimpan di localStorage browser yang sama.
+
+Ini hanya frontend demo/presentasi, bukan sistem produksi dan jangan gunakan data pasien sungguhan.
