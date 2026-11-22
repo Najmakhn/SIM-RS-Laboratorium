@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} · SIMRS Laboratorium</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+{% import "_macros.html" as m with context %}
+{% set ep = request.endpoint or '' %}
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="{{ url_for('dashboard.index') }}"><i class="bi bi-activity"></i><span>SIMRS Lab<small>Instalasi Laboratorium</small></span></a>
+    <nav class="nav-lab" aria-label="Menu utama">
+      <a href="{{ url_for('dashboard.index') }}" class="{{ 'on' if ep == 'dashboard.index' }}"><i class="bi bi-grid-1x2"></i>Dashboard</a>
+      <div class="grp">Pelayanan</div>
+      <a href="{{ url_for('orders.index') }}" class="{{ 'on' if ep in ('orders.index','orders.detail') }}"><i class="bi bi-clipboard2-pulse"></i>Order &amp; Antrian</a>
+      <a href="{{ url_for('orders.baru') }}" class="{{ 'on' if ep == 'orders.baru' }}"><i class="bi bi-plus-circle"></i>Order Baru</a>
+      <a href="{{ url_for('patients.index') }}" class="{{ 'on' if ep.startswith('patients') }}"><i class="bi bi-people"></i>Pasien</a>
+      <div class="grp">Master &amp; Keuangan</div>
+      <a href="{{ url_for('master.tests') }}" class="{{ 'on' if ep.startswith('master.test') }}"><i class="bi bi-droplet-half"></i>Jenis Pemeriksaan</a>
+      <a href="{{ url_for('master.doctors') }}" class="{{ 'on' if ep == 'master.doctors' }}"><i class="bi bi-person-badge"></i>Dokter Pengirim</a>
+      <a href="{{ url_for('billing.index') }}" class="{{ 'on' if ep.startswith('billing') }}"><i class="bi bi-receipt"></i>Billing</a>
+      <a href="{{ url_for('reports.index') }}" class="{{ 'on' if ep.startswith('reports') }}"><i class="bi bi-bar-chart-line"></i>Laporan</a>
+    </nav>
+    <div class="me">
+      <div class="fw-semibold">{{ g.user.nama }}</div>
+      <div class="sub mb-2">{{ {'admin':'Administrator','analis':'Analis Laboratorium','dokter':'Dokter Validator'}[g.user.role] }}</div>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-box-arrow-right me-1"></i>Keluar</button>
+      </form>
+    </div>
+  </aside>
+  <div>
+    <header class="top">
+      <form class="gsearch" action="{{ url_for('dashboard.search') }}" role="search">
+        <i class="bi bi-search"></i>
+        <input class="form-control" name="q" value="{{ request.args.get('q','') if ep == 'dashboard.search' }}"
+               placeholder="Cari pasien, No. RM, no. order, antrian, atau scan barcode…" aria-label="Pencarian global">
+      </form>
+      <span class="date ms-auto"><i class="bi bi-calendar3 me-1"></i>{{ today }}</span>
+    </header>
+    <main>
+      {% for cat, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">{{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button></div>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='vendor/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/JsBarcode.all.min.js') }}"></script>
+{% block scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

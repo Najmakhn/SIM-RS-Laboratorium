@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}{{ 'Pasien baru' if mode == 'baru' else 'Ubah pasien' }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ 'Pendaftaran pasien baru' if mode == 'baru' else 'Ubah data pasien' }}</h1>
+  <p>No. RM: <b class="mono">{{ no_rm }}</b>{% if mode == 'baru' %} (dibuat otomatis){% endif %}</p></div></div>
+<form method="post" class="card" style="max-width:760px"><div class="card-b row g-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="col-md-8"><label class="form-label">Nama lengkap</label><input class="form-control" name="nama" required value="{{ p.get('nama','') }}"></div>
+  <div class="col-md-4"><label class="form-label">Jenis kelamin</label><select class="form-select" name="jenis_kelamin" required>
+    <option value="">Pilih…</option><option value="L" {{ 'selected' if p.get('jenis_kelamin') == 'L' }}>Laki-laki</option><option value="P" {{ 'selected' if p.get('jenis_kelamin') == 'P' }}>Perempuan</option></select></div>
+  <div class="col-md-4"><label class="form-label">Tanggal lahir</label><input class="form-control" type="date" name="tgl_lahir" required value="{{ p.get('tgl_lahir','') }}"></div>
+  <div class="col-md-8"><label class="form-label">No. HP</label><input class="form-control" name="no_hp" value="{{ p.get('no_hp','') or '' }}"></div>
+  <div class="col-12"><label class="form-label">Alamat</label><input class="form-control" name="alamat" value="{{ p.get('alamat','') or '' }}"></div>
+  <div class="col-12 d-flex gap-2"><button class="btn btn-primary">Simpan</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patients.index') }}">Batal</a></div>
+</div></form>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% block title %}Hasil {{ o.no_order }}{% endblock %}
+{% block content %}
+<div class="noprint pagehead"><div><h1>Cetak hasil laboratorium</h1></div>
+  <div class="d-flex gap-2"><button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Cetak / simpan PDF</button>
+  <a class="btn btn-outline-secondary" href="{{ url_for('orders.detail', oid=o.id) }}">Kembali</a></div></div>
+<div class="paper">
+  <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+    <div><div class="d-flex align-items-center gap-2 text-primary fw-bold fs-5"><i class="bi bi-activity"></i>SIMRS Laboratorium</div>
+      <div class="sub">Instalasi Laboratorium Klinik</div></div>
+    <div class="text-end sub mono">{{ o.no_order }}<br>Barcode {{ o.barcode }}</div></div>
+  <h1 class="mb-3">HASIL PEMERIKSAAN LABORATORIUM</h1>
+  <table class="mb-3"><tr>
+    <td style="width:50%"><dl class="kv" style="grid-template-columns:90px 1fr">
+      <dt>Nama</dt><dd>{{ pt.nama }}</dd><dt>No. RM</dt><dd class="mono">{{ pt.no_rm }}</dd>
+      <dt>JK / Umur</dt><dd>{{ 'Laki-laki' if pt.jenis_kelamin == 'L' else 'Perempuan' }} / {{ pt.tgl_lahir|umur }} th</dd></dl></td>
+    <td><dl class="kv" style="grid-template-columns:110px 1fr">
+      <dt>Dokter</dt><dd>{{ o.dokter }}</dd><dt>Sampel</dt><dd>{{ o.jenis_sampel }} ({{ o.waktu_sampel|tgl }} {{ o.waktu_sampel|jam }})</dd>
+      <dt>Divalidasi</dt><dd>{{ o.waktu_validasi|tgl }} {{ o.waktu_validasi|jam }}</dd></dl></td></tr></table>
+  {% for gr in groups %}
+  <table class="rt mb-3"><thead><tr><th colspan="5" class="text-primary" style="font-size:.85rem">{{ gr.test.nama }}</th></tr>
+    <tr><th>Parameter</th><th style="text-align:right">Hasil</th><th>Satuan</th><th>Nilai rujukan</th><th>Flag</th></tr></thead><tbody>
+    {% for r in gr.rows %}{% set p = r.p %}{% set res = r.res %}<tr>
+      <td>{{ p.nama }}</td>
+      <td style="text-align:right" class="mono {{ 'abn' if res and res.flag != 'N' }}">{% if res %}{{ res.nilai|num(p.desimal) if p.tipe == 'angka' else res.nilai }}{% else %}-{% endif %}</td>
+      <td>{{ p.satuan }}</td><td class="mono">{{ res.rujukan_teks if res else '-' }}</td>
+      <td class="{{ 'abn' if res and res.flag != 'N' }}">{{ FLAG_META[res.flag][0] if res and res.flag != 'N' else '' }}</td></tr>{% endfor %}
+  </tbody></table>{% endfor %}
+  {% if o.catatan_hasil %}<p class="sub">Catatan: {{ o.catatan_hasil }}</p>{% endif %}
+  <p class="sub">H/L: di luar nilai rujukan · HH/LL: nilai kritis · A: abnormal (kualitatif)</p>
+  <div class="d-flex justify-content-between mt-5 pt-3">
+    <div class="text-center sub">Analis<br><br><br><b class="text-body">{{ analis.nama if analis else '-' }}</b></div>
+    <div class="text-center sub">Validator<br><br><br><b class="text-body">{{ validator.nama if validator else '-' }}</b></div></div>
+</div>
+{% endblock %}

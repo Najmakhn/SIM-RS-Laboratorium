@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block title %}Jenis Pemeriksaan{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead"><div><h1>Jenis pemeriksaan laboratorium</h1><p>Katalog pemeriksaan, parameter, nilai rujukan, dan tarif.</p></div>
+  {% if g.user.role == 'admin' %}<a class="btn btn-primary" href="{{ url_for('master.test_form') }}"><i class="bi bi-plus-lg me-1"></i>Pemeriksaan baru</a>{% endif %}</div>
+<div class="card">
+  <div class="card-b border-bottom"><form class="row g-2" method="get">
+    <div class="col-md-5"><input class="form-control" name="q" value="{{ q }}" placeholder="Cari nama atau kode pemeriksaan…"></div>
+    <div class="col-md-3"><select class="form-select" name="kategori" onchange="this.form.submit()"><option value="">Semua kategori</option>
+      {% for k in kats %}<option {{ 'selected' if k == kat }}>{{ k }}</option>{% endfor %}</select></div>
+    <div class="col-auto"><button class="btn btn-primary">Cari</button></div></form></div>
+  {% if rows %}<div class="table-responsive"><table class="tbl"><thead><tr><th>Kode</th><th>Pemeriksaan</th><th>Kategori</th><th>Sampel</th><th class="num">Parameter</th><th class="num">Tarif</th><th>Status</th><th></th></tr></thead><tbody>
+    {% for t in rows %}<tr><td class="mono fw-semibold">{{ t.kode }}</td><td>{{ t.nama }}</td><td class="sub">{{ t.kategori }}</td><td class="sub">{{ t.jenis_sampel }}</td>
+      <td class="num">{{ t.n_param }}</td><td class="num">{{ t.tarif|rp }}</td>
+      <td><span class="st {{ 'st-done' if t.aktif else 'st-void' }}">{{ 'Aktif' if t.aktif else 'Nonaktif' }}</span></td>
+      <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('master.test_form', tid=t.id) }}">{{ 'Ubah' if g.user.role == 'admin' else 'Lihat' }}</a></td></tr>{% endfor %}</tbody></table></div>
+  {% else %}{{ m.empty('droplet', 'Pemeriksaan tidak ditemukan.') }}{% endif %}
+</div>
+{% endblock %}

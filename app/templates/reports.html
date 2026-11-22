@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block title %}Laporan{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead"><div><h1>Laporan laboratorium</h1><p>Rekap order per periode, dapat diekspor ke CSV.</p></div>
+  <a class="btn btn-outline-primary" href="{{ url_for('reports.export', dari=dari, sampai=sampai, status=st) }}"><i class="bi bi-download me-1"></i>Ekspor CSV</a></div>
+<div class="row g-3 mb-3">
+  {% for ic, n, l in [('clipboard2-pulse', ringkas.order, 'Total order'), ('patch-check', ringkas.selesai, 'Selesai'), ('exclamation-triangle', ringkas.abnormal, 'Order dengan hasil abnormal'), ('cash-stack', ringkas.pendapatan|rp, 'Nilai tagihan')] %}
+  <div class="col-6 col-xl-3"><div class="card stat"><div class="ic"><i class="bi bi-{{ ic }}"></i></div><div><div class="n mono">{{ n }}</div><div class="l">{{ l }}</div></div></div></div>{% endfor %}
+</div>
+<div class="card">
+  <div class="card-b border-bottom"><form class="row g-2 align-items-end" method="get">
+    <div class="col-md-3"><label class="form-label">Dari</label><input type="date" class="form-control" name="dari" value="{{ dari }}"></div>
+    <div class="col-md-3"><label class="form-label">Sampai</label><input type="date" class="form-control" name="sampai" value="{{ sampai }}"></div>
+    <div class="col-md-3"><label class="form-label">Status</label><select class="form-select" name="status"><option value="">Semua</option>
+      {% for k, v in STATUS.items() %}<option value="{{ k }}" {{ 'selected' if st == k }}>{{ v.label }}</option>{% endfor %}</select></div>
+    <div class="col-auto"><button class="btn btn-primary">Tampilkan</button></div></form></div>
+  {% if rows %}<div class="table-responsive"><table class="tbl"><thead><tr><th>Tanggal</th><th>Order</th><th>Pasien</th><th>Pemeriksaan</th><th>Status</th><th class="num">Abnormal</th><th class="num">Total</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="sub mono">{{ r.tgl_order|tgl }}</td>
+    <td class="mono"><a class="rowlink" href="{{ url_for('orders.detail', oid=r.id) }}">{{ r.no_order }}</a></td>
+    <td>{{ r.pasien }}<div class="sub mono">{{ r.no_rm }}</div></td><td class="sub">{{ r.tests }}</td><td>{{ m.badge(r.status) }}</td>
+    <td class="num">{{ r.n_abn or '–' }}</td><td class="num">{{ r.total|rp }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}{{ m.empty('inbox', 'Tidak ada data pada periode ini.') }}{% endif %}
+</div>
+{% endblock %}

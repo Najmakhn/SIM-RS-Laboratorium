@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block title %}Billing{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead"><div><h1>Billing laboratorium</h1><p>Tagihan terbentuk otomatis dari tarif pemeriksaan saat order dibuat.</p></div></div>
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><div class="card stat warn"><div class="ic"><i class="bi bi-hourglass-split"></i></div><div><div class="n mono">{{ (sums.get('belum').s if sums.get('belum') else 0)|rp }}</div><div class="l">Belum dibayar ({{ sums.get('belum').c if sums.get('belum') else 0 }} tagihan)</div></div></div></div>
+  <div class="col-md-4"><div class="card stat ok"><div class="ic"><i class="bi bi-cash-coin"></i></div><div><div class="n mono">{{ (sums.get('lunas').s if sums.get('lunas') else 0)|rp }}</div><div class="l">Lunas ({{ sums.get('lunas').c if sums.get('lunas') else 0 }} tagihan)</div></div></div></div>
+</div>
+<div class="card">
+  <div class="card-b border-bottom"><form class="row g-2" method="get">
+    <div class="col-md-5"><input class="form-control" name="q" value="{{ q }}" placeholder="Cari pasien, No. RM, no. order…"></div>
+    <div class="col-md-3"><select class="form-select" name="status" onchange="this.form.submit()"><option value="">Semua status</option>
+      <option value="belum" {{ 'selected' if st == 'belum' }}>Belum bayar</option><option value="lunas" {{ 'selected' if st == 'lunas' }}>Lunas</option></select></div>
+    <div class="col-auto"><button class="btn btn-primary">Cari</button></div></form></div>
+  {% if rows %}<div class="table-responsive"><table class="tbl"><thead><tr><th>Order</th><th>Pasien</th><th>Rincian tarif</th><th class="num">Total</th><th>Status</th><th></th></tr></thead><tbody>
+  {% for b in rows %}<tr>
+    <td class="mono"><a class="rowlink" href="{{ url_for('orders.detail', oid=b.order_id) }}">{{ b.no_order }}</a><div class="sub">{{ b.tgl_order|tgl }}</div></td>
+    <td>{{ b.pasien }}<div class="sub mono">{{ b.no_rm }}</div></td>
+    <td class="sub">{% for it in b['items'].split(';') %}{% set a = it.split('|') %}<div>{{ a[0] }} · {{ a[1]|int|rp }}</div>{% endfor %}</td>
+    <td class="num fw-semibold">{{ b.total|rp }}</td>
+    <td><span class="st {{ 'st-done' if b.status == 'lunas' else 'st-wait' }}">{{ 'Lunas' if b.status == 'lunas' else 'Belum bayar' }}</span>{% if b.metode %}<div class="sub">{{ b.metode }}</div>{% endif %}</td>
+    <td class="text-end">{% if b.status == 'belum' and g.user.role == 'admin' %}
+      <form method="post" action="{{ url_for('billing.bayar', bid=b.id) }}" class="d-flex gap-1 justify-content-end"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select class="form-select form-select-sm" name="metode" style="width:110px">{% for x in METODE_BAYAR %}<option>{{ x }}</option>{% endfor %}</select><button class="btn btn-sm btn-primary">Bayar</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}{{ m.empty('receipt', 'Tidak ada tagihan.') }}{% endif %}
+</div>
+{% endblock %}

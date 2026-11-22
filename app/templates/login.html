@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Masuk · SIMRS Laboratorium</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}"></head>
+<body><div class="login-wrap">
+  <section class="login-art">
+    <div class="brand text-white mb-4" style="padding:0"><i class="bi bi-activity text-white"></i><span>SIMRS Lab</span></div>
+    <h1 class="display-6 fw-bold mb-3" style="max-width:20ch">Dari order dokter sampai hasil tervalidasi.</h1>
+    <p class="mb-4 opacity-75" style="max-width:46ch">Modul Instalasi Laboratorium: antrian order, pengambilan sampel berbarcode, input hasil dengan flag otomatis, dan validasi.</p>
+    <ol class="flow" style="max-width:640px">
+      {% for n, l in STEPS %}<li><b>{{ n }}</b><span>{{ l }}</span></li>{% endfor %}
+    </ol>
+  </section>
+  <section class="d-flex align-items-center justify-content-center p-4 bg-white">
+    <form method="post" style="width:100%;max-width:360px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2 class="h4 mb-1">Masuk</h2><p class="sub mb-4">Gunakan akun petugas laboratorium.</p>
+      {% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+      <label class="form-label" for="u">Username</label>
+      <input id="u" class="form-control mb-3" name="username" autofocus required>
+      <label class="form-label" for="p">Password</label>
+      <input id="p" class="form-control mb-4" type="password" name="password" required>
+      <button class="btn btn-primary w-100 py-2">Masuk</button>
+      <div class="card mt-4"><div class="card-b sub">
+        <b class="text-body">Akun demo</b><br>
+        admin / admin123 &nbsp;·&nbsp; analis / analis123 &nbsp;·&nbsp; dokter / dokter123
+      </div></div>
+    </form>
+  </section>
+</div></body></html>

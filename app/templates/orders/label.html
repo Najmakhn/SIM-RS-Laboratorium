@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Label {{ o.barcode }}{% endblock %}
+{% block content %}
+<div class="noprint pagehead"><div><h1>Label barcode sampel</h1><p>Langkah 4: label sampel dengan barcode.</p></div>
+  <div class="d-flex gap-2"><button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Cetak</button>
+  <a class="btn btn-outline-secondary" href="{{ url_for('orders.detail', oid=o.id) }}">Kembali</a></div></div>
+<div class="label-box">
+  <div class="fw-bold">{{ o.pasien }}</div>
+  <div class="sub mono">{{ o.no_rm }} · {{ 'L' if o.jenis_kelamin == 'L' else 'P' }} · {{ o.kode_antrian }}</div>
+  <svg class="barcode my-2" data-code="{{ o.barcode }}"></svg>
+  <div class="sub">{{ o.jenis_sampel }} · {{ o.waktu_sampel|tgl }} {{ o.waktu_sampel|jam }}</div>
+  <div class="small mt-1">{{ o.tests }}</div>
+</div>
+{% endblock %}

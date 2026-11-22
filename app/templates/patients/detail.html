@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}{{ p.nama }}{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead"><div><h1>{{ p.nama }}</h1><p class="mono">{{ p.no_rm }} · {{ 'Laki-laki' if p.jenis_kelamin == 'L' else 'Perempuan' }} · {{ p.tgl_lahir|umur }} th · {{ p.alamat }}</p></div>
+  <div class="d-flex gap-2"><a class="btn btn-primary" href="{{ url_for('orders.baru', patient_id=p.id) }}"><i class="bi bi-plus-lg me-1"></i>Order lab</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patients.edit', pid=p.id) }}">Ubah</a>
+    {% if g.user.role == 'admin' %}<form method="post" action="{{ url_for('patients.hapus', pid=p.id) }}" data-confirm="Hapus pasien ini?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger">Hapus</button></form>{% endif %}</div></div>
+<div class="row g-3">
+  <div class="col-xl-7"><div class="card"><div class="card-h"><h2>Riwayat order laboratorium</h2></div>
+    {% if orders %}<div class="table-responsive"><table class="tbl"><thead><tr><th>Tanggal</th><th>Order</th><th>Pemeriksaan</th><th>Status</th></tr></thead><tbody>
+      {% for o in orders %}<tr><td class="mono sub">{{ o.tgl_order|tgl }}</td>
+        <td><a class="rowlink mono" href="{{ url_for('orders.detail', oid=o.id) }}">{{ o.no_order }}</a><div class="sub">{{ o.dokter }}</div></td>
+        <td class="sub">{{ o.tests }}</td><td>{{ m.badge(o.status) }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}{{ m.empty('inbox', 'Belum ada order laboratorium.') }}{% endif %}</div></div>
+  <div class="col-xl-5"><div class="card"><div class="card-h"><h2>Riwayat nilai (hasil tervalidasi)</h2></div>
+    {% if trend %}<div class="table-responsive"><table class="tbl"><thead><tr><th>Parameter</th><th>Nilai per tanggal</th></tr></thead><tbody>
+      {% for nama, items in trend.items() %}<tr><td>{{ nama }}<div class="sub">{{ items[0].satuan }}</div></td>
+        <td>{% for h in items[-4:] %}<span class="me-2 mono {{ 'text-danger fw-bold' if h.flag != 'N' }}" title="{{ h.tgl|tgl }}">{{ h.nilai|angka_input }}</span>{% endfor %}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}{{ m.empty('graph-up', 'Belum ada hasil tervalidasi.') }}{% endif %}</div></div>
+</div>
+{% endblock %}

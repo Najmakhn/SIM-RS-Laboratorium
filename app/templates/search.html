@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}Pencarian{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead"><div><h1>Hasil pencarian</h1><p>“{{ q }}” — pasien, order, dan pemeriksaan.</p></div></div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card"><div class="card-h"><h2>Pasien ({{ pasien|length }})</h2></div>
+    {% if pasien %}<ul class="list-group list-group-flush">{% for p in pasien %}<li class="list-group-item d-flex justify-content-between">
+      <a class="rowlink fw-semibold text-decoration-none" href="{{ url_for('patients.detail', pid=p.id) }}">{{ p.nama }}</a><span class="sub mono">{{ p.no_rm }}</span></li>{% endfor %}</ul>
+    {% else %}{{ m.empty('person-x', 'Tidak ada pasien.') }}{% endif %}</div></div>
+  <div class="col-lg-6"><div class="card mb-3"><div class="card-h"><h2>Order ({{ orders|length }})</h2></div>
+    {% if orders %}<ul class="list-group list-group-flush">{% for o in orders %}<li class="list-group-item d-flex justify-content-between align-items-center">
+      <span><a class="rowlink fw-semibold text-decoration-none mono" href="{{ url_for('orders.detail', oid=o.id) }}">{{ o.no_order }}</a> <span class="qcode">{{ o.kode_antrian }}</span><div class="sub">{{ o.pasien }} · {{ o.tgl_order|tgl }}</div></span>{{ m.badge(o.status) }}</li>{% endfor %}</ul>
+    {% else %}{{ m.empty('inbox', 'Tidak ada order.') }}{% endif %}</div>
+    <div class="card"><div class="card-h"><h2>Jenis pemeriksaan ({{ tests|length }})</h2></div>
+    {% if tests %}<ul class="list-group list-group-flush">{% for t in tests %}<li class="list-group-item d-flex justify-content-between"><span>{{ t.nama }} <span class="sub">{{ t.kode }}</span></span><span class="mono">{{ t.tarif|rp }}</span></li>{% endfor %}</ul>
+    {% else %}{{ m.empty('droplet', 'Tidak ada pemeriksaan.') }}{% endif %}</div></div>
+</div>
+{% endblock %}

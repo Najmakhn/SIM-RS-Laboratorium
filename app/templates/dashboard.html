@@ -1,0 +1,78 @@
+{% extends "base.html" %}{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead">
+  <div><h1>Dashboard Laboratorium</h1><p>Ringkasan pelayanan hari ini dan 7 hari terakhir.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('orders.baru') }}"><i class="bi bi-plus-lg me-1"></i>Order baru</a>
+</div>
+
+<div class="row g-3 mb-3">
+  {% for ic, n, l, cls in [
+    ('clipboard2-pulse', stat.total, 'Order hari ini', ''),
+    ('hourglass-split', stat.menunggu, 'Menunggu dipanggil', 'warn'),
+    ('eyedropper', stat.proses, 'Sedang diproses', ''),
+    ('patch-check', stat.selesai, 'Selesai divalidasi', 'ok'),
+    ('exclamation-triangle', stat.abnormal, 'Order dengan hasil abnormal', 'bad'),
+    ('stopwatch', stat.tat ~ ' mnt', 'Rata-rata waktu selesai (14 hari)', '')] %}
+  <div class="col-6 col-xl-2"><div class="card stat {{ cls }}"><div class="ic"><i class="bi bi-{{ ic }}"></i></div>
+    <div><div class="n mono">{{ n }}</div><div class="l">{{ l }}</div></div></div></div>
+  {% endfor %}
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-8"><div class="card h-100">
+    <div class="card-h"><h2>Order 7 hari terakhir</h2><span class="sub">Pendapatan hari ini <b class="text-body">{{ stat.pendapatan|rp }}</b></span></div>
+    <div class="card-b"><canvas id="c-trend" height="110" aria-label="Grafik order per hari"></canvas></div></div></div>
+  <div class="col-lg-4"><div class="card h-100">
+    <div class="card-h"><h2>Status order hari ini</h2></div>
+    <div class="card-b d-flex justify-content-center"><div style="max-width:230px;width:100%"><canvas id="c-status" aria-label="Distribusi status"></canvas></div></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-7"><div class="card h-100">
+    <div class="card-h"><h2>Antrian aktif hari ini</h2><a href="{{ url_for('orders.index', tanggal='hari_ini') }}" class="btn btn-sm btn-outline-primary">Lihat semua</a></div>
+    {% if antrian %}
+    <div class="table-responsive"><table class="tbl">
+      <thead><tr><th>Antrian</th><th>Pasien</th><th>Pemeriksaan</th><th>Status</th></tr></thead><tbody>
+      {% for o in antrian %}<tr>
+        <td><span class="qcode">{{ o.kode_antrian }}</span>{% if o.prioritas == 'cito' %}<span class="cito">CITO</span>{% endif %}</td>
+        <td><a class="rowlink" href="{{ url_for('orders.detail', oid=o.id) }}">{{ o.pasien }}</a><div class="sub">{{ o.no_rm }}</div></td>
+        <td class="sub">{{ o.tests }}</td><td>{{ m.badge(o.status) }}</td></tr>{% endfor %}
+      </tbody></table></div>
+    {% else %}{{ m.empty('check2-circle', 'Tidak ada antrian aktif.') }}{% endif %}
+  </div></div>
+  <div class="col-xl-5">
+    <div class="card mb-3"><div class="card-h"><h2>Pemeriksaan terbanyak (30 hari)</h2></div>
+      <div class="card-b"><canvas id="c-top" height="150" aria-label="Pemeriksaan terbanyak"></canvas></div></div>
+    <div class="card"><div class="card-h"><h2>Nilai kritis terbaru</h2><span class="fl fl-c">{{ stat.kritis }} hari ini</span></div>
+      {% if kritis %}<ul class="list-group list-group-flush">{% for k in kritis %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span><a class="rowlink text-decoration-none fw-semibold" href="{{ url_for('orders.detail', oid=k.id) }}">{{ k.pasien }}</a>
+            <span class="sub d-block">{{ k.param }} · {{ k.kode_antrian }}</span></span>
+          <span class="mono fw-bold text-danger">{{ k.nilai|angka_input }} <span class="sub">{{ k.satuan }}</span> {{ m.flag(k.flag) }}</span></li>{% endfor %}</ul>
+      {% else %}{{ m.empty('shield-check', 'Tidak ada nilai kritis.') }}{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+<script>
+(function(){
+  var B="#1b6edc", ink="#5f7389";
+  Chart.defaults.font.family="Inter, system-ui, sans-serif"; Chart.defaults.color=ink;
+  new Chart(document.getElementById("c-trend"),{type:"bar",
+    data:{labels:{{ trend.labels|tojson }},datasets:[{data:{{ trend.data|tojson }},backgroundColor:B,borderRadius:6,maxBarThickness:34}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#eef3f9"}},x:{grid:{display:false}}}}});
+  var sd={{ status_dist|tojson }}, names={menunggu:"Menunggu",dipanggil:"Dipanggil",sampel_diambil:"Sampel diambil",diperiksa:"Diperiksa",selesai:"Selesai",batal:"Batal"},
+      cols={menunggu:"#e0a526",dipanggil:"#8a63e0",sampel_diambil:"#2aa7d1",diperiksa:B,selesai:"#17875c",batal:"#9aa9b9"};
+  var ks=Object.keys(sd);
+  new Chart(document.getElementById("c-status"),{type:"doughnut",
+    data:{labels:ks.map(function(k){return names[k]}),datasets:[{data:ks.map(function(k){return sd[k]}),backgroundColor:ks.map(function(k){return cols[k]}),borderWidth:2}]},
+    options:{cutout:"62%",plugins:{legend:{position:"bottom",labels:{boxWidth:10,usePointStyle:true}}}}});
+  new Chart(document.getElementById("c-top"),{type:"bar",
+    data:{labels:{{ top|map(attribute='nama')|list|tojson }},datasets:[{data:{{ top|map(attribute='c')|list|tojson }},backgroundColor:B,borderRadius:5,maxBarThickness:18}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#eef3f9"}},y:{grid:{display:false}}}}});
+})();
+</script>
+{% endblock %}

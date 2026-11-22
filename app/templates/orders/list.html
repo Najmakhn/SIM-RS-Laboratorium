@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% block title %}Order & Antrian{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead"><div><h1>Order &amp; Antrian</h1><p>Daftar order laboratorium dari dokter.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('orders.baru') }}"><i class="bi bi-plus-lg me-1"></i>Order baru</a></div>
+
+<div class="card">
+  <div class="card-b border-bottom">
+    <form class="row g-2 align-items-center" method="get">
+      <div class="col-lg-5"><div class="position-relative">
+        <i class="bi bi-search position-absolute top-50 translate-middle-y ms-3 text-secondary"></i>
+        <input class="form-control ps-5" name="q" value="{{ q }}" placeholder="Cari pasien, No. RM, no. order, antrian, barcode, dokter, pemeriksaan…"></div></div>
+      <div class="col-6 col-lg-2"><select class="form-select" name="tanggal" onchange="this.form.submit()">
+        <option value="">Semua tanggal</option><option value="hari_ini" {{ 'selected' if tanggal=='hari_ini' }}>Hari ini</option></select></div>
+      <div class="col-6 col-lg-2"><select class="form-select" name="prioritas" onchange="this.form.submit()">
+        <option value="">Semua prioritas</option><option value="cito" {{ 'selected' if prioritas=='cito' }}>Cito</option>
+        <option value="rutin" {{ 'selected' if prioritas=='rutin' }}>Rutin</option></select></div>
+      <input type="hidden" name="status" value="{{ status }}">
+      <div class="col-auto"><button class="btn btn-primary">Cari</button>
+        {% if q or status or tanggal or prioritas %}<a class="btn btn-link" href="{{ url_for('orders.index') }}">Reset</a>{% endif %}</div>
+    </form>
+    <div class="filters mt-3">
+      <a class="chip {{ 'on' if not status }}" href="{{ url_for('orders.index', q=q, tanggal=tanggal, prioritas=prioritas) }}">Semua</a>
+      {% for k in ['menunggu','dipanggil','sampel_diambil','diperiksa','selesai','batal'] %}
+      <a class="chip {{ 'on' if status == k }}" href="{{ url_for('orders.index', q=q, tanggal=tanggal, prioritas=prioritas, status=k) }}">{{ STATUS[k].label }}{% if counts.get(k) %}<em>{{ counts[k] }}</em>{% endif %}</a>
+      {% endfor %}
+      <span class="sub ms-1">(angka = order hari ini)</span>
+    </div>
+  </div>
+  {% if rows %}
+  <div class="table-responsive"><table class="tbl">
+    <thead><tr><th>Antrian</th><th>No. Order</th><th>Pasien</th><th>Pemeriksaan</th><th>Dokter</th><th>Waktu</th><th>Status</th><th class="num">Tagihan</th></tr></thead>
+    <tbody>{% for o in rows %}<tr>
+      <td><span class="qcode">{{ o.kode_antrian }}</span>{% if o.prioritas == 'cito' %}<span class="cito">CITO</span>{% endif %}</td>
+      <td class="mono"><a class="rowlink" href="{{ url_for('orders.detail', oid=o.id) }}">{{ o.no_order }}</a><div class="sub">{{ o.asal }}</div></td>
+      <td>{{ o.pasien }}<div class="sub">{{ o.no_rm }}</div></td>
+      <td class="sub" style="max-width:240px">{{ o.tests }}</td>
+      <td class="sub">{{ o.dokter }}</td>
+      <td class="mono sub">{{ o.tgl_order|tgl }}<div>{{ o.tgl_order|jam }}</div></td>
+      <td>{{ m.badge(o.status) }}</td>
+      <td class="num">{{ o.total|rp }}<div class="sub">{{ 'Lunas' if o.bayar == 'lunas' else 'Belum bayar' }}</div></td></tr>{% endfor %}</tbody>
+  </table></div>
+  {{ m.pager(hal, total, per_page, 'orders.index', q=q, status=status, tanggal=tanggal, prioritas=prioritas) }}
+  {% else %}{{ m.empty('inbox', 'Tidak ada order yang cocok dengan pencarian.') }}{% endif %}
+</div>
+{% endblock %}

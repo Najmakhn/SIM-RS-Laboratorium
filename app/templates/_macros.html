@@ -1,0 +1,33 @@
+{% macro badge(s) %}<span class="st {{ STATUS[s].badge }}">{{ STATUS[s].label }}</span>{% endmacro %}
+
+{% macro flag(f) %}{% set m = FLAG_META[f] %}<span class="fl {{ m[1] }}" title="{{ m[2] }}">{{ m[0] }}</span>{% endmacro %}
+
+{% macro stepper(status) %}
+  {% set cur = STATUS[status].step %}
+  <ol class="flow" aria-label="Alur laboratorium">
+    {% for n, label in STEPS %}
+      {% set cls = 'void' if status == 'batal' else ('done' if n < cur else ('now' if n == cur else '')) %}
+      {# order selesai: seluruh langkah selesai #}
+      {% if status == 'selesai' %}{% set cls = 'done' %}{% endif %}
+      <li class="{{ cls }}"><b>{% if cls == 'done' %}<i class="bi bi-check-lg"></i>{% else %}{{ n }}{% endif %}</b><span>{{ label }}</span></li>
+    {% endfor %}
+  </ol>
+{% endmacro %}
+
+{% macro pager(hal, total, per_page, endpoint) %}
+  {% set pages = ((total + per_page - 1) // per_page) %}
+  {% if pages > 1 %}
+  <nav class="d-flex align-items-center justify-content-between p-3 border-top" aria-label="Halaman">
+    <span class="sub">Menampilkan {{ (hal-1)*per_page + 1 }}–{{ [hal*per_page, total]|min }} dari {{ total }}</span>
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item {{ 'disabled' if hal <= 1 }}"><a class="page-link" href="{{ url_for(endpoint, hal=hal-1, **kwargs) }}">‹</a></li>
+      {% for n in range(1, pages+1) if n == 1 or n == pages or (n - hal)|abs <= 1 %}
+        <li class="page-item {{ 'active' if n == hal }}"><a class="page-link" href="{{ url_for(endpoint, hal=n, **kwargs) }}">{{ n }}</a></li>
+      {% endfor %}
+      <li class="page-item {{ 'disabled' if hal >= pages }}"><a class="page-link" href="{{ url_for(endpoint, hal=hal+1, **kwargs) }}">›</a></li>
+    </ul>
+  </nav>
+  {% else %}<div class="p-3 border-top sub">{{ total }} data</div>{% endif %}
+{% endmacro %}
+
+{% macro empty(icon, text) %}<div class="empty"><i class="bi bi-{{ icon }}"></i>{{ text }}</div>{% endmacro %}

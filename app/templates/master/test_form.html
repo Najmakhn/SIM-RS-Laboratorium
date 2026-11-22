@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% block title %}{{ 'Ubah' if t else 'Baru' }} pemeriksaan{% endblock %}
+{% block content %}
+{% set ro = g.user.role != 'admin' %}
+<div class="pagehead"><div><h1>{{ t.nama if t else 'Pemeriksaan baru' }}</h1><p>Parameter dan nilai rujukan dipakai untuk flag otomatis saat input hasil.</p></div></div>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<fieldset {{ 'disabled' if ro }}>
+<div class="card mb-3"><div class="card-b row g-3">
+  <div class="col-md-2"><label class="form-label">Kode</label><input class="form-control" name="kode" required value="{{ t.kode if t else '' }}"></div>
+  <div class="col-md-4"><label class="form-label">Nama pemeriksaan</label><input class="form-control" name="nama" required value="{{ t.nama if t else '' }}"></div>
+  <div class="col-md-3"><label class="form-label">Kategori</label><input class="form-control" name="kategori" required list="kat" value="{{ t.kategori if t else '' }}">
+    <datalist id="kat"><option>Hematologi<option>Kimia Klinik<option>Urinalisis<option>Imunologi</datalist></div>
+  <div class="col-md-3"><label class="form-label">Jenis sampel</label><input class="form-control" name="jenis_sampel" required value="{{ t.jenis_sampel if t else '' }}"></div>
+  <div class="col-md-3"><label class="form-label">Tarif (Rp)</label><input class="form-control" type="number" min="0" name="tarif" required value="{{ t.tarif if t else 0 }}"></div>
+  <div class="col-md-3 d-flex align-items-end"><div class="form-check"><input class="form-check-input" type="checkbox" name="aktif" id="ak" {{ 'checked' if not t or t.aktif }}><label for="ak" class="form-check-label">Aktif</label></div></div>
+</div></div>
+<div class="card"><div class="card-h"><h2>Parameter &amp; nilai rujukan</h2>
+  <button type="button" class="btn btn-sm btn-outline-primary" id="add-param"><i class="bi bi-plus-lg"></i> Parameter</button></div>
+<div class="table-responsive"><table class="tbl" id="ptbl"><thead><tr><th>Nama</th><th>Satuan</th><th>Tipe</th><th>Min L</th><th>Max L</th><th>Min P</th><th>Max P</th><th>Kritis ↓</th><th>Kritis ↑</th><th>Opsi (dipisah |)</th><th>Normal</th><th>Desimal</th></tr></thead><tbody>
+{% for p in params %}{% include "master/_param_row.html" %}{% endfor %}
+</tbody></table></div></div>
+<div class="d-flex gap-2 mt-3">{% if not ro %}<button class="btn btn-primary">Simpan</button>{% endif %}<a class="btn btn-outline-secondary" href="{{ url_for('master.tests') }}">Kembali</a></div>
+</fieldset></form>
+<template id="prow">{% set p = None %}{% include "master/_param_row.html" %}</template>
+{% endblock %}
+{% block scripts %}<script>
+document.getElementById("add-param").addEventListener("click",function(){
+  document.querySelector("#ptbl tbody").appendChild(document.getElementById("prow").content.cloneNode(true));});
+</script>{% endblock %}

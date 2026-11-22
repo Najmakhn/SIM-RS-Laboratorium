@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}Dokter Pengirim{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+<div class="pagehead"><div><h1>Dokter pengirim</h1><p>Dokter yang meminta pemeriksaan laboratorium.</p></div></div>
+<div class="row g-3"><div class="col-lg-8"><div class="card">
+  <div class="card-b border-bottom"><form class="d-flex gap-2" method="get"><input class="form-control" style="max-width:380px" name="q" value="{{ q }}" placeholder="Cari nama / spesialisasi…"><button class="btn btn-primary">Cari</button></form></div>
+  {% if rows %}<table class="tbl"><thead><tr><th>Nama</th><th>Spesialisasi</th><th class="num">Order</th><th>Status</th>{% if g.user.role == 'admin' %}<th></th>{% endif %}</tr></thead><tbody>
+  {% for d in rows %}<tr><form method="post" action="{{ url_for('master.doctor_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ d.id }}">
+    {% if g.user.role == 'admin' %}
+    <td><input class="form-control form-control-sm" name="nama" value="{{ d.nama }}"></td><td><input class="form-control form-control-sm" name="spesialis" value="{{ d.spesialis }}"></td>
+    <td class="num">{{ d.n_order }}</td><td><div class="form-check"><input class="form-check-input" type="checkbox" name="aktif" {{ 'checked' if d.aktif }}></div></td>
+    <td class="text-end"><button class="btn btn-sm btn-outline-primary">Simpan</button></td>
+    {% else %}<td>{{ d.nama }}</td><td class="sub">{{ d.spesialis }}</td><td class="num">{{ d.n_order }}</td><td><span class="st {{ 'st-done' if d.aktif else 'st-void' }}">{{ 'Aktif' if d.aktif else 'Nonaktif' }}</span></td>{% endif %}
+  </form></tr>{% endfor %}</tbody></table>{% else %}{{ m.empty('person-x', 'Dokter tidak ditemukan.') }}{% endif %}
+</div></div>
+{% if g.user.role == 'admin' %}<div class="col-lg-4"><div class="card"><div class="card-h"><h2>Tambah dokter</h2></div>
+  <form method="post" action="{{ url_for('master.doctor_save') }}" class="card-b"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="form-label">Nama</label><input class="form-control mb-3" name="nama" required>
+    <label class="form-label">Spesialisasi</label><input class="form-control mb-3" name="spesialis" required>
+    <button class="btn btn-primary w-100">Tambah</button></form></div></div>{% endif %}
+</div>
+{% endblock %}

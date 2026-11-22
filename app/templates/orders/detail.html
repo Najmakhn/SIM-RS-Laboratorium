@@ -1,0 +1,148 @@
+{% extends "base.html" %}{% block title %}Order {{ o.kode_antrian }}{% endblock %}
+{% block content %}
+{% import "_macros.html" as m with context %}
+{% set role = g.user.role %}
+{% set can_lab = role in ('admin','analis') %}
+{% set editable = can_lab and o.status in ('sampel_diambil','diperiksa') %}
+<div class="pagehead">
+  <div>
+    <h1><span class="qcode me-2" style="font-size:1.1rem">{{ o.kode_antrian }}</span>{{ o.pasien }}
+      {% if o.prioritas == 'cito' %}<span class="cito">CITO</span>{% endif %}</h1>
+    <p class="mono">{{ o.no_order }} · {{ o.asal }} · {{ m.badge(o.status) }}</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap noprint">
+    {% if o.barcode %}<a class="btn btn-outline-secondary" href="{{ url_for('orders.label', oid=o.id) }}" target="_blank"><i class="bi bi-upc-scan me-1"></i>Label barcode</a>{% endif %}
+    {% if o.status == 'selesai' %}<a class="btn btn-primary" href="{{ url_for('orders.cetak', oid=o.id) }}" target="_blank"><i class="bi bi-printer me-1"></i>Cetak hasil</a>{% endif %}
+    {% if o.status in ('menunggu','dipanggil') and role in ('admin','dokter') %}
+    <form method="post" action="{{ url_for('orders.batal', oid=o.id) }}" data-confirm="Batalkan order ini?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger">Batalkan</button></form>{% endif %}
+  </div>
+</div>
+
+<div class="card mb-3"><div class="card-b">{{ m.stepper(o.status) }}</div></div>
+
+<div class="row g-3">
+  <!-- kolom kiri: identitas & jejak -->
+  <div class="col-xl-4">
+    <div class="card mb-3"><div class="card-h"><h2>Data pasien &amp; order</h2></div><div class="card-b">
+      <dl class="kv">
+        <dt>Pasien</dt><dd><a href="{{ url_for('patients.detail', pid=pt.id) }}" class="text-decoration-none">{{ pt.nama }}</a></dd>
+        <dt>No. RM</dt><dd class="mono">{{ pt.no_rm }}</dd>
+        <dt>JK / Umur</dt><dd>{{ 'Laki-laki' if pt.jenis_kelamin == 'L' else 'Perempuan' }}, {{ pt.tgl_lahir|umur }} th</dd>
+        <dt>Dokter</dt><dd>{{ o.dokter }}</dd>
+        <dt>Waktu order</dt><dd>{{ o.tgl_order|tgl }} {{ o.tgl_order|jam }}</dd>
+        <dt>Catatan</dt><dd>{{ o.catatan_klinis or '-' }}</dd>
+        {% if o.barcode %}<dt>Sampel</dt><dd>{{ o.jenis_sampel }} · {{ o.waktu_sampel|jam }}</dd>
+        <dt>Petugas</dt><dd>{{ petugas.get(o.petugas_sampel, '-') }}</dd>{% endif %}
+      </dl>
+    </div></div>
+
+    <div class="card mb-3"><div class="card-h"><h2>Tagihan</h2><span class="st {{ 'st-done' if o.bayar == 'lunas' else 'st-wait' }}">{{ 'Lunas' if o.bayar == 'lunas' else 'Belum bayar' }}</span></div>
+      <div class="card-b">
+        {% for g_ in groups %}<div class="d-flex justify-content-between py-1"><span>{{ g_.test.nama }}</span><span class="mono">{{ g_.test.tarif_order|rp }}</span></div>{% endfor %}
+        <div class="bill mt-3"><div class="rp">Rp</div><div><small>Input billing: tarif pemeriksaan</small><b class="fs-5 mono">{{ o.total|rp }}</b></div></div>
+      </div></div>
+
+    <div class="card"><div class="card-h"><h2>Jejak status</h2></div><div class="card-b">
+      <ul class="timeline">{% for l in log|reverse %}<li><b>{{ STATUS[l.status].label }}</b>{% if l.keterangan %} — {{ l.keterangan }}{% endif %}
+        <small>{{ l.waktu|tgl }} {{ l.waktu|jam }}{% if l.petugas %} · {{ l.petugas }}{% endif %}</small></li>{% endfor %}</ul>
+    </div></div>
+  </div>
+
+  <!-- kolom kanan: tindakan & hasil -->
+  <div class="col-xl-8">
+    {% if o.status in ('menunggu','dipanggil') %}
+    <div class="card mb-3 border-primary"><div class="card-h"><h2>Langkah {{ 2 if o.status == 'menunggu' else 3 }}: {{ 'Panggil pasien ke lab' if o.status == 'menunggu' else 'Cek identitas &amp; ambil sampel'|safe }}</h2></div>
+      <div class="card-b">
+      {% if not can_lab %}<p class="sub mb-0">Menunggu petugas laboratorium memproses order ini.</p>
+      {% else %}
+        {% if o.status == 'menunggu' %}
+        <form method="post" action="{{ url_for('orders.panggil', oid=o.id) }}" class="d-flex align-items-center gap-3 mb-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary"><i class="bi bi-megaphone me-1"></i>Panggil {{ o.kode_antrian }}</button>
+          <span class="sub">Atau langsung ambil sampel di bawah bila pasien sudah di lab.</span></form><hr>{% endif %}
+        <form method="post" action="{{ url_for('orders.sampel', oid=o.id) }}" class="row g-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="col-12"><div class="form-check p-3 border rounded-3 bg-light ps-5">
+            <input class="form-check-input" type="checkbox" name="identitas_ok" id="idok" value="1" required>
+            <label class="form-check-label" for="idok">Identitas dicek: <b>{{ pt.nama }}</b> · {{ pt.no_rm }} · lahir {{ pt.tgl_lahir|tgl }} ({{ pt.tgl_lahir|umur }} th)</label></div></div>
+          <div class="col-md-6"><label class="form-label">Jenis sampel</label>
+            <input class="form-control" name="jenis_sampel" required value="{{ groups|map(attribute='test')|map(attribute='jenis_sampel')|unique|join(', ') }}"></div>
+          <div class="col-md-6"><label class="form-label">Waktu ambil sampel</label>
+            <input class="form-control" type="datetime-local" name="waktu_sampel" value="{{ now_local }}"></div>
+          <div class="col-12 d-flex gap-2 flex-wrap">
+            <button class="btn btn-primary"><i class="bi bi-eyedropper me-1"></i>Simpan sampel</button>
+            <button class="btn btn-outline-primary" name="cetak" value="1"><i class="bi bi-upc-scan me-1"></i>Simpan &amp; cetak label barcode</button></div>
+        </form>
+      {% endif %}
+    </div></div>
+    {% endif %}
+
+    {% if o.barcode %}
+    <div class="card mb-3"><div class="card-b d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div><div class="sub">Langkah 4 · Barcode sampel</div><svg class="barcode mt-1" data-code="{{ o.barcode }}"></svg></div>
+      <div class="sub text-end">Tempel label pada tabung.<br>Scan/ketik kode pada kolom pencarian untuk membuka order ini.</div></div></div>
+    {% endif %}
+
+    {% if o.status in ('sampel_diambil','diperiksa','selesai') %}
+    <form method="post" action="{{ url_for('orders.hasil', oid=o.id) }}" class="card mb-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="card-h"><h2>Langkah 5: Input hasil pemeriksaan</h2>
+        <span class="d-flex gap-2 align-items-center">
+          {% if abnormal %}<span class="fl fl-h">{{ abnormal }} abnormal</span>{% endif %}
+          {% if editable %}<button type="button" id="btn-alat" class="btn btn-sm btn-outline-primary" data-url="{{ url_for('orders.alat', oid=o.id) }}"><i class="bi bi-cpu me-1"></i>Ambil dari alat</button>{% endif %}</span></div>
+      <div class="table-responsive"><table class="tbl res">
+        <thead><tr><th>Parameter</th><th class="num">Hasil</th><th>Satuan</th><th>Nilai rujukan</th><th style="width:90px">Flag</th></tr></thead>
+        <tbody>
+        {% for gr in groups %}
+          <tr class="grp"><td colspan="5">{{ gr.test.nama }} <span class="sub fw-normal">· {{ gr.test.jenis_sampel }}</span></td></tr>
+          {% for r in gr.rows %}{% set p = r.p %}{% set res = r.res %}{% set lo, hi = ref_range(p, pt.jenis_kelamin) %}
+          <tr>
+            <td>{{ p.nama }}</td>
+            <td class="num">
+              {% if editable %}
+                {% if p.tipe == 'pilihan' %}
+                <select class="form-select form-select-sm val d-inline-block" id="val_{{ p.id }}" name="nilai_{{ p.id }}" data-pid="{{ p.id }}" data-normal="{{ p.nilai_normal }}">
+                  <option value="">–</option>{% for op in p.pilihan.split('|') %}<option {{ 'selected' if res and res.nilai == op }}>{{ op }}</option>{% endfor %}</select>
+                {% else %}
+                <input class="form-control form-control-sm val d-inline-block" id="val_{{ p.id }}" name="nilai_{{ p.id }}" inputmode="decimal" autocomplete="off"
+                  data-pid="{{ p.id }}" data-min="{{ lo if lo is not none else '' }}" data-max="{{ hi if hi is not none else '' }}"
+                  data-kmin="{{ p.krit_min if p.krit_min is not none else '' }}" data-kmax="{{ p.krit_max if p.krit_max is not none else '' }}"
+                  value="{{ res.nilai|angka_input if res else '' }}">
+                {% endif %}
+                <input type="hidden" id="alat_{{ p.id }}" name="alat_{{ p.id }}" value="{{ '1' if res and res.sumber == 'alat' else '' }}">
+              {% else %}
+                <b class="mono {{ 'text-danger' if res and res.flag != 'N' }}">{% if res %}{{ res.nilai|num(p.desimal) if p.tipe == 'angka' else res.nilai }}{% else %}–{% endif %}</b>
+              {% endif %}
+            </td>
+            <td class="sub">{{ p.satuan }}</td>
+            <td class="mono sub">{{ r.rujukan }}</td>
+            <td id="flag_{{ p.id }}">{% if res %}{{ m.flag(res.flag) }}{% if res.sumber == 'alat' %}<span class="dev" id="dev_{{ p.id }}">alat</span>{% endif %}{% endif %}</td>
+          </tr>{% endfor %}
+        {% endfor %}
+        </tbody></table></div>
+      {% if editable %}
+      <div class="card-b border-top d-flex gap-3 align-items-end flex-wrap">
+        <div class="flex-grow-1"><label class="form-label">Catatan hasil (opsional)</label>
+          <input class="form-control" name="catatan_hasil" value="{{ o.catatan_hasil or '' }}" maxlength="200"></div>
+        <button class="btn btn-outline-primary"><i class="bi bi-save me-1"></i>Simpan hasil</button></div>
+      {% elif o.catatan_hasil %}<div class="card-b border-top sub">Catatan: {{ o.catatan_hasil }}</div>{% endif %}
+      <div class="card-b border-top sub py-2">Flag dihitung otomatis dari nilai rujukan sesuai jenis kelamin. H/L = di luar rujukan, HH/LL = kritis, A = hasil kualitatif abnormal.</div>
+    </form>
+    {% endif %}
+
+    {% if o.status == 'diperiksa' %}
+    <div class="card border-primary"><div class="card-b d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div><h2 class="h6 mb-1">Langkah 6: Validasi &amp; kirim ke dokter</h2>
+        <span class="sub">Hasil dikirim ke {{ o.dokter }}.{% if abnormal %} Terdapat {{ abnormal }} parameter di luar rujukan.{% endif %}</span></div>
+      <form method="post" action="{{ url_for('orders.validasi', oid=o.id) }}" data-confirm="Validasi hasil dan kirim ke dokter? Hasil tidak dapat diubah lagi.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary"><i class="bi bi-patch-check me-1"></i>Validasi &amp; kirim</button></form>
+    </div></div>
+    {% elif o.status == 'selesai' %}
+    <div class="alert alert-success d-flex align-items-center gap-2"><i class="bi bi-patch-check-fill fs-5"></i>
+      Divalidasi oleh <b>{{ petugas.get(o.validator_id, '-') }}</b> pada {{ o.waktu_validasi|tgl }} {{ o.waktu_validasi|jam }}; hasil terkirim ke {{ o.dokter }}.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

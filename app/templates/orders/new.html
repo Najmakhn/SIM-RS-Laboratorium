@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% block title %}Order Baru{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Order laboratorium baru</h1>
+  <p>Langkah 1: order masuk dari dokter. Tagihan dihitung otomatis dari tarif pemeriksaan.</p></div></div>
+<form method="post" class="row g-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="col-lg-8">
+    <div class="card mb-3"><div class="card-h"><h2>Pasien &amp; dokter pengirim</h2></div><div class="card-b row g-3">
+      <div class="col-12 position-relative">
+        <label class="form-label" for="pasien-q">Pasien</label>
+        <input type="hidden" id="patient_id" name="patient_id" value="{{ selected.id if selected else '' }}">
+        <input id="pasien-q" class="form-control" autocomplete="off" placeholder="Ketik nama atau No. RM…"
+               value="{{ (selected.nama ~ ' (' ~ selected.no_rm ~ ')') if selected else '' }}">
+        <div id="pasien-ac" class="ac" hidden></div>
+        <div class="form-text">Belum terdaftar? <a href="{{ url_for('patients.baru') }}">Daftarkan pasien baru</a>.</div>
+      </div>
+      <div class="col-md-6"><label class="form-label">Dokter pengirim</label>
+        <select class="form-select" name="doctor_id" required><option value="">Pilih dokter…</option>
+          {% for d in doctors %}<option value="{{ d.id }}" {{ 'selected' if form.get('doctor_id') == d.id|string }}>{{ d.nama }} — {{ d.spesialis }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><label class="form-label">Asal pasien</label>
+        <select class="form-select" name="asal">{% for a in ASAL %}<option {{ 'selected' if form.get('asal') == a }}>{{ a }}</option>{% endfor %}</select></div>
+      <div class="col-md-3"><label class="form-label">Prioritas</label>
+        <select class="form-select" name="prioritas"><option value="rutin">Rutin</option>
+          <option value="cito" {{ 'selected' if form.get('prioritas') == 'cito' }}>Cito (segera)</option></select></div>
+      <div class="col-12"><label class="form-label">Catatan klinis</label>
+        <input class="form-control" name="catatan" maxlength="200" value="{{ form.get('catatan','') }}" placeholder="Mis. kontrol DM, demam 3 hari, pra operasi"></div>
+    </div></div>
+    <div class="card"><div class="card-h"><h2>Jenis pemeriksaan</h2></div><div class="card-b">
+      {% for kat, items in tests|groupby('kategori') %}
+        <div class="sub fw-semibold mb-2 {{ 'mt-3' if not loop.first }}">{{ kat }}</div>
+        <div class="row g-2">{% for t in items %}<div class="col-md-6"><label class="pick">
+          <input class="form-check-input mt-1" type="checkbox" name="test_id" value="{{ t.id }}" data-tarif="{{ t.tarif }}" {{ 'checked' if t.id in picked }}>
+          <span><span class="nm">{{ t.nama }}</span><span class="tf d-block">{{ t.jenis_sampel }} · {{ t.tarif|rp }}</span></span></label></div>{% endfor %}</div>
+      {% endfor %}
+    </div></div>
+  </div>
+  <div class="col-lg-4"><div class="card position-sticky" style="top:76px"><div class="card-h"><h2>Ringkasan</h2></div><div class="card-b">
+    <div class="bill mb-3"><div class="rp">Rp</div><div><small>Input billing: tarif pemeriksaan</small><b id="total-tarif" class="fs-5 mono">Rp 0</b></div></div>
+    <p class="sub"><span id="jumlah-tes">0</span> pemeriksaan dipilih. Nomor order, kode antrian, dan tagihan dibuat otomatis saat disimpan.</p>
+    <button class="btn btn-primary w-100 py-2"><i class="bi bi-send me-1"></i>Kirim order ke lab</button>
+  </div></div></div>
+</form>
+{% endblock %}
