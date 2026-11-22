@@ -1,7 +1,7 @@
 # SIMRS — Modul Laboratorium
 
 Tugas EAS mata kuliah **Sistem Informasi Manajemen Rumah Sakit**.
-Modul: **Laboratorium** · Kelompok: _Kelompok 8_
+Modul: **Laboratorium** · Kelompok: _Kelompok 8_ Kelas B
 Anggota Kelompok:
 1. Syalfa Azzahra Wahyudi (019)
 2. Ziana Nawafila (021)
