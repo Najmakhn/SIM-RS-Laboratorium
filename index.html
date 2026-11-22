@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIMRS Laboratorium — Demo</title>
+<link rel="stylesheet" href="assets/vendor/bootstrap.min.css">
+<link rel="stylesheet" href="assets/vendor/bootstrap-icons.min.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+:root{--demo-blue:#2f91b5}
+body{background:#f5f7fa}.shell{min-height:100vh}.side{position:fixed!important;inset:0 auto 0 0;overflow-y:auto;z-index:20}
+.shell>div:last-child{margin-left:260px}.top{position:sticky;top:0;z-index:10;background:#fff}
+main{padding:26px;max-width:1500px}.nav-lab a{cursor:pointer;text-decoration:none}.nav-lab a.on{background:#eaf5f9;color:#19769a;font-weight:600}
+.brand{text-decoration:none}.page{display:none}.page.active{display:block}.stat-card,.panel{background:#fff;border:1px solid #e7ebef;border-radius:12px;padding:18px}
+.stat-card .num{font-size:1.7rem;font-weight:700}.muted{color:#718096}.table{vertical-align:middle}.form-control,.form-select{min-height:40px}
+.demo-pill{font-size:11px;background:#fff4d6;color:#8a6500;padding:5px 9px;border-radius:20px;font-weight:600}
+.btn-primary{background:#2388ad;border-color:#2388ad}.btn-primary:hover{background:#176e8e}
+@media(max-width:850px){.side{width:78px!important}.side .brand span,.side .nav-lab a:not(.brand),.side .grp,.side .me{font-size:0}.side .nav-lab a{padding:12px}.shell>div:last-child{margin-left:78px}main{padding:14px}.top{padding:10px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="side">
+<a class="brand" href="#" onclick="showPage('dashboard');return false"><i class="bi bi-activity"></i><span>SIMRS Lab<small>Instalasi Laboratorium</small></span></a>
+<nav class="nav-lab" aria-label="Menu utama">
+<a class="on" data-page="dashboard"><i class="bi bi-grid-1x2"></i>Dashboard</a>
+<div class="grp">Pelayanan</div>
+<a data-page="orders"><i class="bi bi-clipboard2-pulse"></i>Order &amp; Antrian</a>
+<a data-page="neworder"><i class="bi bi-plus-circle"></i>Order Baru</a>
+<a data-page="patients"><i class="bi bi-people"></i>Pasien</a>
+<div class="grp">Master &amp; Keuangan</div>
+<a data-page="tests"><i class="bi bi-droplet-half"></i>Jenis Pemeriksaan</a>
+<a data-page="doctors"><i class="bi bi-person-badge"></i>Dokter Pengirim</a>
+<a data-page="billing"><i class="bi bi-receipt"></i>Billing</a>
+<a data-page="reports"><i class="bi bi-bar-chart-line"></i>Laporan</a>
+</nav>
+<div class="me"><div class="fw-semibold">Demo Pengguna</div><div class="sub mb-2">Administrator</div><span class="demo-pill">MODE DEMO</span></div>
+</aside>
+<div>
+<header class="top"><form class="gsearch" id="globalSearch"><i class="bi bi-search"></i><input class="form-control" id="searchInput" placeholder="Cari pasien, No. RM, order, atau antrian…"></form><span class="date ms-auto"><i class="bi bi-calendar3 me-1"></i><span id="today"></span></span></header>
+<main>
+<section id="dashboard" class="page active">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"><div><h3 class="mb-1">Dashboard Laboratorium</h3><div class="muted">Ringkasan aktivitas instalasi laboratorium hari ini</div></div><button class="btn btn-primary" onclick="showPage('neworder')"><i class="bi bi-plus-lg me-1"></i>Order Baru</button></div>
+<div class="row g-3 mb-4">
+<div class="col-6 col-xl-3"><div class="stat-card"><div class="muted">Total Order</div><div class="num" id="statOrders">12</div><small class="text-success">Hari ini</small></div></div>
+<div class="col-6 col-xl-3"><div class="stat-card"><div class="muted">Menunggu</div><div class="num" id="statWaiting">4</div><small class="muted">Dalam antrian</small></div></div>
+<div class="col-6 col-xl-3"><div class="stat-card"><div class="muted">Diproses</div><div class="num">5</div><small class="muted">Pemeriksaan berjalan</small></div></div>
+<div class="col-6 col-xl-3"><div class="stat-card"><div class="muted">Selesai</div><div class="num">3</div><small class="text-success">Hasil tervalidasi</small></div></div></div>
+<div class="panel"><div class="d-flex justify-content-between mb-3"><h5>Order Terbaru</h5><a href="#" onclick="showPage('orders');return false">Lihat semua</a></div><div class="table-responsive"><table class="table"><thead><tr><th>No. Order</th><th>Pasien</th><th>Pemeriksaan</th><th>Antrian</th><th>Status</th></tr></thead><tbody id="recentRows"></tbody></table></div></div>
+</section>
+<section id="orders" class="page">
+<div class="d-flex justify-content-between align-items-center mb-3"><div><h3>Order &amp; Antrian</h3><div class="muted">Daftar order pemeriksaan laboratorium</div></div><button class="btn btn-primary" onclick="showPage('neworder')">+ Order Baru</button></div>
+<div class="panel"><input class="form-control mb-3" id="orderFilter" placeholder="Cari nomor order atau nama pasien..." oninput="render()"><div class="table-responsive"><table class="table"><thead><tr><th>No. Order</th><th>Pasien</th><th>Pemeriksaan</th><th>Antrian</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="orderRows"></tbody></table></div></div>
+</section>
+<section id="neworder" class="page">
+<h3>Order Pemeriksaan Baru</h3><p class="muted">Isi data pasien dan pemeriksaan untuk membuat order demo.</p>
+<form id="orderForm" class="panel"><div class="row g-3">
+<div class="col-md-6"><label class="form-label">Nama Pasien</label><input class="form-control" name="patient" required placeholder="Masukkan nama pasien"></div>
+<div class="col-md-6"><label class="form-label">No. Rekam Medis</label><input class="form-control" name="rm" required placeholder="Contoh: 00-12-34"></div>
+<div class="col-md-6"><label class="form-label">Dokter Pengirim</label><select class="form-select" name="doctor"><option>dr. Andi Pratama</option><option>dr. Siti Rahma</option><option>dr. Budi Santoso</option></select></div>
+<div class="col-md-6"><label class="form-label">Jenis Pemeriksaan</label><select class="form-select" name="test"><option>Darah Lengkap</option><option>Glukosa Darah Sewaktu</option><option>Kolesterol Total</option><option>Urinalisis</option></select></div>
+<div class="col-md-6"><label class="form-label">Prioritas</label><select class="form-select" name="priority"><option value="Rutin">Rutin</option><option value="Cito">Cito</option></select></div>
+<div class="col-12"><label class="form-label">Catatan Klinis</label><textarea class="form-control" name="notes" rows="2" placeholder="Catatan tambahan (opsional)"></textarea></div>
+</div><div class="mt-4 d-flex gap-2"><button class="btn btn-primary">Simpan Order Demo</button><button type="button" class="btn btn-outline-secondary" onclick="showPage('orders')">Batal</button></div><small class="d-block muted mt-3">Simulasi: data tersimpan di browser ini, bukan database rumah sakit.</small></form>
+</section>
+<section id="patients" class="page"><h3>Data Pasien</h3><p class="muted">Data pasien dalam simulasi ini.</p><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>No. RM</th><th>Nama</th><th>Terdaftar dari</th></tr></thead><tbody id="patientRows"></tbody></table></div></div></section>
+<section id="tests" class="page"><h3>Jenis Pemeriksaan</h3><p class="muted">Katalog pemeriksaan laboratorium demo.</p><div class="panel"><table class="table"><thead><tr><th>Kode</th><th>Pemeriksaan</th><th>Kategori</th><th>Jenis Sampel</th><th>Tarif</th></tr></thead><tbody><tr><td>LAB001</td><td>Darah Lengkap</td><td>Hematologi</td><td>Darah EDTA</td><td>Rp 75.000</td></tr><tr><td>LAB002</td><td>Glukosa Darah Sewaktu</td><td>Kimia Klinik</td><td>Serum</td><td>Rp 35.000</td></tr><tr><td>LAB003</td><td>Kolesterol Total</td><td>Kimia Klinik</td><td>Serum</td><td>Rp 50.000</td></tr><tr><td>LAB004</td><td>Urinalisis</td><td>Urinalisis</td><td>Urin</td><td>Rp 45.000</td></tr></tbody></table></div></section>
+<section id="doctors" class="page"><h3>Dokter Pengirim</h3><div class="panel"><table class="table"><thead><tr><th>Nama</th><th>Spesialisasi</th></tr></thead><tbody><tr><td>dr. Andi Pratama</td><td>Penyakit Dalam</td></tr><tr><td>dr. Siti Rahma</td><td>Anak</td></tr><tr><td>dr. Budi Santoso</td><td>Umum</td></tr></tbody></table></div></section>
+<section id="billing" class="page"><h3>Billing &amp; Pembayaran</h3><p class="muted">Ringkasan tagihan simulasi.</p><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>No. Order</th><th>Pasien</th><th>Total</th><th>Status</th></tr></thead><tbody id="billingRows"></tbody></table></div></div></section>
+<section id="reports" class="page"><h3>Laporan Laboratorium</h3><p class="muted">Ringkasan data dari order demo.</p><div class="row g-3"><div class="col-md-4"><div class="stat-card"><div class="muted">Jumlah Order</div><div class="num" id="reportCount">0</div></div></div><div class="col-md-4"><div class="stat-card"><div class="muted">Pendapatan simulasi</div><div class="num" id="reportRevenue">Rp 0</div></div></div></div><button class="btn btn-outline-primary mt-3" onclick="window.print()">Cetak laporan</button></section>
+</main></div></div>
+<script src="assets/vendor/bootstrap.bundle.min.js"></script><script src="assets/vendor/chart.umd.js"></script><script src="assets/js/demo.js"></script>
+</body></html>
