@@ -38,6 +38,22 @@ python run.py                    # buka http://127.0.0.1:5000
 Database SQLite (`instance/simrs_lab.db`) dibuat otomatis beserta data contoh saat pertama dijalankan.
 Reset data contoh: `flask --app run init-db`.
 
+
+> **Catatan:** file database (`instance/*.db`) dan folder `__pycache__/` tidak disimpan di Git (lihat `.gitignore`).
+> Setiap anggota membuat database sendiri di laptopnya, jadi jangan commit file `.db`.
+> Perintah `init-db` **menghapus seluruh isi database** lalu mengisi ulang data contoh.
+
+### Setelah menarik perubahan `.gitignore` (cukup sekali)
+
+Kalau `git pull` gagal dengan pesan *"Your local changes ... would be overwritten"* pada `instance/simrs_lab.db`:
+
+```bash
+cp instance/simrs_lab.db ../backup_simrs.db   # opsional, kalau ada data yang mau disimpan
+git restore instance/simrs_lab.db
+git pull
+python run.py                                 # database baru dibuat otomatis
+```
+
 **Akun demo**: `admin / admin123` · `analis / analis123` · `dokter / dokter123`
 
 | Peran | Hak akses |
