@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Database lokal (dibuat ulang otomatis / lewat init-db)
+instance/*.db
+instance/*.db-journal
+
+# Secret (dibahas di langkah berikutnya)
+.env
