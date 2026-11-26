@@ -52,6 +52,7 @@ def login():
             _catatan_gagal().pop(username, None)
             session.clear()
             session["uid"] = u["id"]
+            session.permanent = True  # pakai batas waktu PERMANENT_SESSION_LIFETIME
             nxt = request.args.get("next", "")
             return redirect(nxt if nxt.startswith("/") and not nxt.startswith("//") else url_for("dashboard.index"))
         jumlah, _ = _catatan_gagal().get(username, (0, 0.0))
