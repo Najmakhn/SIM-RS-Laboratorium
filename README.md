@@ -66,6 +66,7 @@ python -c "import secrets; print(secrets.token_hex(32))"
 Tempel hasil perintah kedua setelah `SECRET_KEY=` di file `.env`. File `.env` sudah ada di `.gitignore`, jadi tidak ikut ke GitHub.
 Kalau `SECRET_KEY` dikosongkan, aplikasi memakai kunci acak setiap kali dijalankan, sehingga semua pengguna otomatis logout saat server restart.
 Setelah menarik perubahan ini, jalankan lagi `pip install -r requirements.txt` karena ada library baru (`python-dotenv`).
+Mode debug Flask sekarang mati secara bawaan. Untuk menyalakannya saat development, tambahkan `FLASK_DEBUG=1` di `.env`. Jangan dinyalakan saat aplikasi online, karena halaman debug bisa menampilkan isi kode.
 
 **Akun demo**: `admin / admin123` · `analis / analis123` · `dokter / dokter123`
 
