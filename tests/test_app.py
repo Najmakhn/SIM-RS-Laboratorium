@@ -180,6 +180,22 @@ def test_sesi_login_punya_batas_waktu():
     assert app.permanent_session_lifetime.total_seconds() == 8 * 3600
 
 
+def test_galat_server_tampil_halaman_ramah():
+    app = create_app({"DATABASE": str(Path(tempfile.mkdtemp()) / "t.db"), "TESTING": False})
+
+    @app.route("/uji-galat")
+    def uji_galat():
+        raise RuntimeError("galat uji")
+
+    c = app.test_client()
+    login(c, "admin")
+    r = c.get("/uji-galat")
+    assert r.status_code == 500
+    html = r.get_data(as_text=True)
+    assert "Terjadi kesalahan di server" in html
+    assert "galat uji" not in html  # detail galat tidak bocor ke pengguna
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-q"]))
