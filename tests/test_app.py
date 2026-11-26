@@ -170,6 +170,16 @@ def test_login_dikunci_setelah_5_kali_gagal():
     assert r.status_code == 302
 
 
+def test_sesi_login_punya_batas_waktu():
+    app = create_app({"DATABASE": str(Path(tempfile.mkdtemp()) / "t.db"), "TESTING": True})
+    c = app.test_client()
+    tok = re.search(r'value="([^"]+)"', c.get("/login").get_data(as_text=True)).group(1)
+    r = c.post("/login", data={"username": "admin", "password": "admin123", "csrf_token": tok})
+    cookie = r.headers.get("Set-Cookie", "")
+    assert "session=" in cookie and "Expires=" in cookie
+    assert app.permanent_session_lifetime.total_seconds() == 8 * 3600
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-q"]))
