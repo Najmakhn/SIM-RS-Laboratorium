@@ -54,6 +54,19 @@ git pull
 python run.py                                 # database baru dibuat otomatis
 ```
 
+### Konfigurasi rahasia (`.env`)
+
+`SECRET_KEY` dipakai Flask untuk menandatangani cookie login, jadi nilainya harus rahasia dan tidak boleh ditulis di kode.
+
+```bash
+cp .env.example .env
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Tempel hasil perintah kedua setelah `SECRET_KEY=` di file `.env`. File `.env` sudah ada di `.gitignore`, jadi tidak ikut ke GitHub.
+Kalau `SECRET_KEY` dikosongkan, aplikasi memakai kunci acak setiap kali dijalankan, sehingga semua pengguna otomatis logout saat server restart.
+Setelah menarik perubahan ini, jalankan lagi `pip install -r requirements.txt` karena ada library baru (`python-dotenv`).
+
 **Akun demo**: `admin / admin123` · `analis / analis123` · `dokter / dokter123`
 
 | Peran | Hak akses |
