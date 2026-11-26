@@ -100,4 +100,11 @@ def create_app(test_config=None):
         from flask import render_template
         return render_template("error.html", e=e), e.code
 
+    @app.errorhandler(500)
+    def err_server(e):
+        """Galat tak terduga: tampilkan halaman ramah, detailnya tetap tercatat di log server."""
+        from flask import render_template
+        e.description = "Terjadi kesalahan di server. Silakan coba lagi atau hubungi admin."
+        return render_template("error.html", e=e), 500
+
     return app
