@@ -1,7 +1,7 @@
 """SIMRS - Modul Laboratorium (Flask + SQLite + Bootstrap 5)."""
 import os
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -20,6 +20,7 @@ def create_app(test_config=None):
         # Isi SECRET_KEY di file .env. Kalau kosong, dipakai kunci acak (semua user logout tiap restart).
         SECRET_KEY=os.environ.get("SECRET_KEY") or secrets.token_hex(32),
         DATABASE=os.environ.get("SIMRS_DB", str(root / "instance" / "simrs_lab.db")),
+        PERMANENT_SESSION_LIFETIME=timedelta(hours=8),  # login otomatis habis setelah 8 jam tidak aktif
     )
     if test_config:
         app.config.update(test_config)

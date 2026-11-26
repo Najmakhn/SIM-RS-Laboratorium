@@ -155,6 +155,31 @@ def test_hak_akses_peran():
     assert c.post("/orders/1/panggil", data={"csrf_token": tok}).status_code == 403
 
 
+def test_login_dikunci_setelah_5_kali_gagal():
+    app = create_app({"DATABASE": str(Path(tempfile.mkdtemp()) / "t.db"), "TESTING": True})
+    c = app.test_client()
+    tok = re.search(r'value="([^"]+)"', c.get("/login").get_data(as_text=True)).group(1)
+    for _ in range(5):
+        c.post("/login", data={"username": "analis2", "password": "salah", "csrf_token": tok})
+    # percobaan ke-6 ditolak walaupun password-nya benar
+    r = c.post("/login", data={"username": "analis2", "password": "analis123", "csrf_token": tok})
+    assert r.status_code == 429
+    assert "Terlalu banyak percobaan" in r.get_data(as_text=True)
+    # username lain tidak ikut terkunci
+    r = c.post("/login", data={"username": "dokter", "password": "dokter123", "csrf_token": tok})
+    assert r.status_code == 302
+
+
+def test_sesi_login_punya_batas_waktu():
+    app = create_app({"DATABASE": str(Path(tempfile.mkdtemp()) / "t.db"), "TESTING": True})
+    c = app.test_client()
+    tok = re.search(r'value="([^"]+)"', c.get("/login").get_data(as_text=True)).group(1)
+    r = c.post("/login", data={"username": "admin", "password": "admin123", "csrf_token": tok})
+    cookie = r.headers.get("Set-Cookie", "")
+    assert "session=" in cookie and "Expires=" in cookie
+    assert app.permanent_session_lifetime.total_seconds() == 8 * 3600
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-q"]))

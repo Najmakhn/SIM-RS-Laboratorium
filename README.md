@@ -81,7 +81,7 @@ Setelah menarik perubahan ini, jalankan lagi `pip install -r requirements.txt` k
 |----------|-----------|
 | Front-End | Bootstrap 5 (lokal, tanpa CDN), layout sidebar, stepper alur 6 langkah, dashboard Chart.js, responsif, halaman cetak |
 | Menu Pencarian | Pencarian global (pasien/No. RM/order/antrian/**scan barcode**), pencarian + filter di Order, Pasien, Pemeriksaan, Dokter, Billing, Laporan; autocomplete pasien di form order |
-| Fungsionalitas | Alur 6 langkah dengan validasi urutan status, validasi input, kontrol peran, token CSRF, hasil terkunci setelah validasi |
+| Fungsionalitas | Alur 6 langkah dengan validasi urutan status, validasi input, kontrol peran, token CSRF, hasil terkunci setelah validasi, login dikunci 5 menit setelah 5 kali gagal, sesi login habis setelah 8 jam tidak aktif |
 | Integrasi Database | SQLite, 11 tabel berelasi (`schema.sql`), semua halaman membaca/menulis database, audit trail status |
 | Kompleksitas & Kelengkapan | Nilai rujukan per jenis kelamin, nilai kritis, hasil kualitatif, billing & pembayaran, riwayat nilai pasien, dashboard & TAT, laporan + ekspor CSV, CRUD pasien/pemeriksaan/dokter |
 
