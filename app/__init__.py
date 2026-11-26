@@ -17,7 +17,8 @@ def create_app(test_config=None):
     root = Path(__file__).resolve().parent.parent
     load_dotenv(root / ".env")  # baca SECRET_KEY dll. dari file .env (kalau ada)
     app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-ganti-di-produksi"),
+        # Isi SECRET_KEY di file .env. Kalau kosong, dipakai kunci acak (semua user logout tiap restart).
+        SECRET_KEY=os.environ.get("SECRET_KEY") or secrets.token_hex(32),
         DATABASE=os.environ.get("SIMRS_DB", str(root / "instance" / "simrs_lab.db")),
     )
     if test_config:
