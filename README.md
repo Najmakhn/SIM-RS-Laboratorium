@@ -92,6 +92,7 @@ Mode debug Flask sekarang mati secara bawaan. Untuk menyalakannya saat developme
 simrs-lab/
 ├── run.py                # titik masuk
 ├── schema.sql            # skema database
+├── migrations/          # perubahan skema bernomor (0001_..., 0002_...)
 ├── requirements.txt
 ├── app/
 │   ├── __init__.py       # app factory, CSRF, filter template
@@ -119,6 +120,17 @@ erDiagram
   lab_order ||--o{ status_log : "jejak"
   user ||--o{ status_log : "oleh"
 ```
+
+## Mengubah struktur database (migration)
+
+Jangan mengubah `schema.sql` untuk menambah tabel, kolom, atau indeks. Buat file migrasi baru di folder `migrations/`:
+
+1. Beri nama dengan nomor urut berikutnya, misalnya `migrations/0002_tambah_kolom_email_pasien.sql`.
+2. Isi dengan perintah SQL, misalnya `ALTER TABLE patient ADD COLUMN email TEXT;`. Jangan menulis `BEGIN` atau `COMMIT`, karena setiap file sudah otomatis dijalankan dalam satu transaksi.
+3. Jalankan `python run.py` atau `flask --app run migrate`. Migrasi yang belum pernah dijalankan akan diterapkan, dan **data lama tidak dihapus**.
+
+Versi database tersimpan di `PRAGMA user_version`. Setelah teman-teman menarik migrasi baru dari GitHub, database mereka otomatis ikut diperbarui saat aplikasi dijalankan.
+Kalau dua branch sama-sama membuat nomor yang sama, aplikasi menolak jalan dengan pesan "Nomor migrasi dobel". Ganti nomor file di branch yang belakangan sebelum pull request di-merge.
 
 ## Tes
 
