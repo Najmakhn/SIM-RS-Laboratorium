@@ -1,12 +1,15 @@
 """Tes alur utama SIMRS Lab:  python -m pytest -q   (atau: python tests/test_app.py)"""
 import re
+import sqlite3
 import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app import create_app  # noqa: E402
-from app.db import query  # noqa: E402
+from app.db import daftar_migrasi, jalankan_migrasi, query  # noqa: E402
 from app.services import evaluate  # noqa: E402
 
 
@@ -194,6 +197,48 @@ def test_galat_server_tampil_halaman_ramah():
     html = r.get_data(as_text=True)
     assert "Terjadi kesalahan di server" in html
     assert "galat uji" not in html  # detail galat tidak bocor ke pengguna
+
+
+def test_database_baru_langsung_di_versi_migrasi_terbaru():
+    app = create_app({"DATABASE": str(Path(tempfile.mkdtemp()) / "t.db"), "TESTING": True})
+    conn = sqlite3.connect(app.config["DATABASE"])
+    terbaru = max((n for n, _ in daftar_migrasi()), default=0)
+    assert conn.execute("PRAGMA user_version").fetchone()[0] == terbaru
+    indeks = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+    assert {"idx_param_test", "idx_result_param"} <= indeks
+
+
+def test_migrasi_baru_tidak_menghapus_data_lama():
+    folder = Path(tempfile.mkdtemp())
+    (folder / "0001_buat_tabel.sql").write_text("CREATE TABLE contoh (nama TEXT);")
+    conn = sqlite3.connect(":memory:")
+    assert jalankan_migrasi(conn, folder) == ["0001_buat_tabel.sql"]
+    conn.execute("INSERT INTO contoh VALUES ('data lama')")
+    conn.commit()
+    # anggota tim menambah migrasi baru: kolom baru masuk, data lama tetap ada
+    (folder / "0002_tambah_kolom.sql").write_text("ALTER TABLE contoh ADD COLUMN catatan TEXT;")
+    assert jalankan_migrasi(conn, folder) == ["0002_tambah_kolom.sql"]
+    assert conn.execute("SELECT nama, catatan FROM contoh").fetchall() == [("data lama", None)]
+    assert conn.execute("PRAGMA user_version").fetchone()[0] == 2
+    assert jalankan_migrasi(conn, folder) == []  # dijalankan ulang: tidak ada yang dobel
+
+
+def test_migrasi_gagal_dibatalkan_seluruhnya():
+    folder = Path(tempfile.mkdtemp())
+    (folder / "0001_rusak.sql").write_text("CREATE TABLE contoh (nama TEXT); INI BUKAN SQL;")
+    conn = sqlite3.connect(":memory:")
+    with pytest.raises(RuntimeError, match="0001_rusak.sql"):
+        jalankan_migrasi(conn, folder)
+    assert conn.execute("PRAGMA user_version").fetchone()[0] == 0
+    assert conn.execute("SELECT name FROM sqlite_master WHERE name='contoh'").fetchone() is None
+
+
+def test_nomor_migrasi_dobel_ditolak():
+    folder = Path(tempfile.mkdtemp())
+    (folder / "0003_punya_budi.sql").write_text("SELECT 1;")
+    (folder / "0003_punya_sari.sql").write_text("SELECT 1;")
+    with pytest.raises(RuntimeError, match="dobel"):
+        daftar_migrasi(folder)
 
 
 if __name__ == "__main__":
