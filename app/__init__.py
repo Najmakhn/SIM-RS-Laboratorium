@@ -42,6 +42,15 @@ def create_app(test_config=None):
         database.init_db(app.config["DATABASE"], seed=True)
         print("Database direset:", app.config["DATABASE"])
 
+    @app.cli.command("migrate")
+    def migrate_cmd():
+        """Jalankan migrasi database yang belum pernah dijalankan (data lama tidak dihapus)."""
+        dijalankan = database.migrate(app.config["DATABASE"])
+        for nama in dijalankan:
+            print("Dijalankan:", nama)
+        terbaru = max((n for n, _ in database.daftar_migrasi()), default=0)
+        print("Database sudah di versi terbaru:", terbaru)
+
     # ---- sesi, peran, CSRF ------------------------------------------------
     @app.before_request
     def load_user():
