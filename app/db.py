@@ -37,12 +37,14 @@ def execute(sql, args=()):
 
 
 def init_db(db_path=None, seed=True):
-    """Buat ulang semua tabel dari schema.sql, lalu (opsional) isi data contoh."""
+    """Buat ulang semua tabel dari schema.sql + migrations/, lalu (opsional) isi data contoh."""
     path = db_path or current_app.config["DATABASE"]
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.executescript((ROOT / "schema.sql").read_text(encoding="utf-8"))
+    conn.execute("PRAGMA user_version = 0")  # tabel baru dibuat ulang, jadi semua migrasi dijalankan lagi
+    jalankan_migrasi(conn)
     if seed:
         from .seed import seed_all
         seed_all(conn)

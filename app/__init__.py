@@ -31,6 +31,10 @@ def create_app(test_config=None):
     Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
     if not Path(app.config["DATABASE"]).exists():
         database.init_db(app.config["DATABASE"], seed=True)
+    else:
+        # Database lama tetap dipakai; cukup tambahkan perubahan dari migrasi yang belum dijalankan
+        for nama in database.migrate(app.config["DATABASE"]):
+            app.logger.warning("Migrasi dijalankan: %s", nama)
 
     @app.cli.command("init-db")
     def init_db_cmd():
