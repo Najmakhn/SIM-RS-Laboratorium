@@ -31,12 +31,25 @@ def create_app(test_config=None):
     Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
     if not Path(app.config["DATABASE"]).exists():
         database.init_db(app.config["DATABASE"], seed=True)
+    else:
+        # Database lama tetap dipakai; cukup tambahkan perubahan dari migrasi yang belum dijalankan
+        for nama in database.migrate(app.config["DATABASE"]):
+            app.logger.warning("Migrasi dijalankan: %s", nama)
 
     @app.cli.command("init-db")
     def init_db_cmd():
         """Reset database dan isi data contoh."""
         database.init_db(app.config["DATABASE"], seed=True)
         print("Database direset:", app.config["DATABASE"])
+
+    @app.cli.command("migrate")
+    def migrate_cmd():
+        """Jalankan migrasi database yang belum pernah dijalankan (data lama tidak dihapus)."""
+        dijalankan = database.migrate(app.config["DATABASE"])
+        for nama in dijalankan:
+            print("Dijalankan:", nama)
+        terbaru = max((n for n, _ in database.daftar_migrasi()), default=0)
+        print("Database sudah di versi terbaru:", terbaru)
 
     # ---- sesi, peran, CSRF ------------------------------------------------
     @app.before_request
